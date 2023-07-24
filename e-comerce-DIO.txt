@@ -1,0 +1,230 @@
+-- criando o bd
+create database ecomerce;
+
+use ecomerce;
+
+
+-- cria tabela cliente
+create table clientes
+(
+	idCliente		int auto_increment primary key,
+    nome			varchar(10),
+    sobrenome		varchar(30),
+    cpf				char(11) not null,
+    endereco 		varchar(255),
+    constraint  unique_cpf_cliente unique (cpf)
+);
+drop table clientes;
+desc clientes;
+insert into clientes (nome, sobrenome, cpf, endereco) 
+values  ('Matheus', 'Pimentel', 12345678999, 'Rua Alameda 289, Centro - Cidade das Flores'),
+		('Ricardo', 'Silva', 12345678963, 'Alameda Vinha 1009, Centro - Cidade das Flores'),
+        ('Julia', 'França', 12345678923, 'Rua Lareiras, Centro - Cidade das Flores'),
+        ('Roberta', 'Assis', 12345678932, 'Av. Koller 19, Centro - Cidade das Flores'),
+        ('Isabela', 'Cruz', 12345678911, 'Rua Alameda das Flores 28, Centro - Cidade das Flores');
+select * from clientes;
+
+
+-- cria tabela produto
+create table produto
+(
+	idProduto					int auto_increment primary key,
+    nomeProduto					varchar(40) not null,
+    classificacao_Crian			bool default false,
+    cateegoria					enum('Eletronico', 'Vestuario', 'Brinquedos', 'Alimentos', 'Moveis') default 'Eletronico' not null,
+    avaliacao 					float default 0,
+    size						varchar(10)
+);
+drop table produto;
+insert into produto (nomeProduto, classificacao_Crian, cateegoria, size)
+values ('Barbie Elsa', true, 'Brinquedos', '3'),
+		('Body Caters', true, 'Vestuario', '5'),
+        ('Microfone Vedo', true, 'Eletronico', '4'),
+        ('Sofá Retratil', false, 'Eletronico', '3'),
+        ('Farinha de Arroz', false, 'Alimentos', '2'),
+        ('Fire Stick Amazon', false, 'Eletronico', '3');
+
+insert into produto (nomeProduto, classificacao_Crian, cateegoria, size)
+values ('geladeira', true, 'Eletronico', '3x57x80');
+        
+        select * from produto;
+
+-- criando tabela pagamento
+create table pagamento
+(
+	idCliente		int,
+    id_pagamento	int,
+    tipo_pagamento	enum('Dinheiro', 'Boleto', 'Cartão'),
+	limitAvaliado	float,
+    primary key (idCliente, id_pagamento),
+    constraint fk_idClient foreign key (idCliente) references clientes(idCliente)
+);
+drop table pagamento;
+-- cria tabela pedido
+create table orders
+(
+	idOrders			int auto_increment primary key,
+    idOrdersCliente		int,
+    idOrdersStatus   	enum('Cancelado', 'Confirmado', 'Em Processamento') default 'Em processamento',
+    ordersDescription	varchar(255),
+    sendValue			float default 10,
+    pagamentoDinheiro	boolean default false,
+    constraint fk_orders_client foreign key(idOrdersCliente) references clientes(idCliente)
+);
+
+
+drop table orders;
+insert into orders(idOrdersCliente, idOrdersStatus, ordersDescription, sendValue, pagamentoDinheiro)
+values	( 1, default, 'compra via aplicativo', null, 1),
+		( 2, default, 'compra via aplicativo', 50, 0),
+		( 3, 'Confirmado', null, null, 1),
+		( 4, default, 'compra via web site', 150, 0);
+
+delete from orders where idOrdersCliente in (1, 2, 3, 4);
+select * from orders
+order by idOrdersCliente;
+desc orders;
+
+
+-- criar tabela estoque
+create table produtoestoque
+(
+	idProdutoestoque 		int auto_increment primary key,
+   -- categoria				enum('Cancelado', 'Confirmado', 'En Processamento') default 'Em Processamento',		
+	localizacao				varchar(25),
+    quantidade				int default 0
+);
+insert into produtoestoque (localizacao, quantidade) 
+values  ('Rio de Janeiro', 1000),
+		('Rio de Janeiro', 500),
+        ('São Paulo', 10),
+        ('São Paulo', 100),
+        ('São Paulo', 10),
+        ('Brasilia', 60);
+select * from produtoestoque;        
+
+
+
+-- criar tabela fornecedor
+create table fornecedor
+(
+	idFornecedor			int auto_increment primary key,
+    razaoSocial				varchar(255) not null,
+    cnpj					char(15) not null,
+    contato					varchar(11) not null,
+    constraint unique_fornecedor unique (cnpj)
+);
+
+
+-- criar tabela vendedor
+create table vendedor
+(
+	idvendedor			int auto_increment primary key,
+    razaoSocial			varchar(100),
+    nomeFantasia		varchar(100),
+    cnpj				char(15) not null,
+    cpf				    char(11) not null,
+    localizacao			varchar(100),
+    contato				varchar(11) not null,
+    constraint unique_cnpj_vendedor unique (cnpj),
+    constraint unique_cpf_vendedor unique (cpf)
+);
+insert into vendedor(razaoSocial, nomeFantasia, cnpj, cpf, localizacao, contato)
+values  ('Eletronicos Silva', null, '123456789321645', '12345678936', 'Rua F, 110 Eldorado - Contagem', 98765432110),
+		('Eletronicos Nathan', null, '123456789321670', '12345678999', 'Rua Sr. Bicalho, 1100 Novo Riacho - Contagem', 98765432303);
+        select * from vendedor;
+
+-- criar tabela produtoVendedor
+create table produtoVendedor
+(
+idPvendedor			int,
+idProduto			int,
+quantidadeProdt		int default 1,
+primary key (idPvendedor, idProduto),
+constraint fk_produto_vendedor foreign key (idPvendedor) references vendedor(idvendedor),
+constraint fk_produto foreign key (idProduto) references produto(idProduto)
+);
+
+insert into produtovendedor (idPvendedor, idProduto, quantidadeProdt)
+values  (1, 1, 500),
+		(1, 2, 400),
+        (2, 4, 633),
+        (3, 3, 5),
+        (2, 5, 10);
+select * from produtovendedor;localestoque
+desc produtoVendedor;
+
+-- criar tabela ordemProduto
+create table ordemProduto
+(
+	idPOproduto			int,
+    idPOorder			int,
+    poQuantidade		int default 1,
+    poStatus			enum('Disponivel', 'sem Estoque') default 'Disponivel',
+    primary key (idPOproduto, idPOorder),
+    constraint fk_produto_vendedor foreign key (idPOproduto) references produto(idProduto),
+    constraint fk_produto foreign key(idPOorder) references orders(idOrders)
+);
+insert into ordemproduto (idPOproduto, idPOorder, poQuantidade, poStatus)
+values  (1, 1, 2, null),
+		(2, 1, 1, null),
+        (3, 2, 1, null);
+        select * from ordemproduto;
+
+-- criar tabela localEstoque
+create table localEstoque
+(
+	idLocProduto		int,
+    idLocEstoque		int,
+    localizacao			varchar(100),
+    primary key (idLocProduto, idLocEstoque),
+    constraint fk_produtoVendedor foreign key(idLocProduto) references produto(idProduto),
+    constraint fk_produto foreign key(idLocEstoque) references produtoVendedor(idPvendedor)
+    );
+    insert into localestoque(idLocProduto, idLocEstoque, localizacao)
+    values  (1, 2, 'RJ'),
+			(2, 6, 'GO');
+            select * from produtovendedor;
+            
+            
+            
+create table produtofornecedor
+    (
+		idprodutoFornecedor			int,
+        idProduto					int,
+        quantidade					int not null,
+        primary key(idprodutoFornecedor, idProduto),
+        constraint fk_produto_vendedor_vendedor foreign key(idprodutoFornecedor) references vendedor(idvendedor),
+        constraint fk_produto_local foreign key(idprodutoFornecedor) references localEstoque(idLocProduto)
+    );
+
+
+use information_schema;
+show tables;
+
+-- querys
+-- recupera o numero de clientes 
+select count(*) from clientes;
+/*
+-- verifica os pedidos feitos pelos clientes
+select * from clientes as c, orders as o 
+where c.idCliente = o.idOrdersCliente;
+
+-- verifica os pedidos feitos pelos clientes e especifica quais atributos recuperados concatena nome e sobrenome e ordena pelo idOrders
+select concat(nome, ' ', sobrenome) as Nome_Completo_Cliente, idOrders as Pedido, 
+	idOrdersStatus as Andamento from clientes as c, orders as o 
+where c.idCliente = o.idOrdersCliente
+order by idOrders;*/
+
+
+
+-- mostra o que cada vendedor vendeu
+select idvendedor, razaoSocial, idProduto, nomeProduto
+from vendedor, produto
+where idProduto = idProduto
+order by idvendedor;
+
+-- junçao entre cliente e produto
+select c.idCliente, concat(nome, ' ', sobrenome)as Nome_Completo, p.idProduto, p.nomeProduto
+from clientes as c
+inner join  produto as p on c.idCliente = 1;
